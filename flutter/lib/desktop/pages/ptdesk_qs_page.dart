@@ -43,7 +43,7 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (isInHomePage()) {
-        windowManager.setSize(getIncomingOnlyHomeSize());
+        windowManager.setSize(const Size(380, 560));
       }
     });
   }
@@ -90,7 +90,7 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                       const SizedBox(height: 16),
                       _valueCard(
                         label: fa ? 'شناسه شما' : 'Your ID',
-                        value: model.serverId.text,
+                        listenable: model.serverId,
                         valueColor: _kText,
                         letterSpacing: 2,
                         actions: [
@@ -104,7 +104,7 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                       const SizedBox(height: 10),
                       _valueCard(
                         label: fa ? 'رمز یکبار مصرف' : 'One-time password',
-                        value: model.serverPasswd.text,
+                        listenable: model.serverPasswd,
                         valueColor: _kCyan,
                         letterSpacing: 3,
                         actions: [
@@ -164,7 +164,7 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
 
   Widget _valueCard({
     required String label,
-    required String value,
+    required TextEditingController listenable,
     required Color valueColor,
     required double letterSpacing,
     required List<Widget> actions,
@@ -185,14 +185,17 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
               Expanded(
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    value,
-                    textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                      color: valueColor,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: letterSpacing,
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: listenable,
+                    builder: (context, value, _) => Text(
+                      value.text,
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        color: valueColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: letterSpacing,
+                      ),
                     ),
                   ),
                 ),
