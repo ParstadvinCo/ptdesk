@@ -190,7 +190,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   buildIDBoard(BuildContext context) {
     final model = gFFI.serverModel;
     return Container(
-      margin: const EdgeInsets.only(left: 20, right: 11),
+      margin: const EdgeInsetsDirectional.only(start: 20, end: 11),
       height: 57,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -202,7 +202,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           ).marginOnly(top: 5),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 7),
+              padding: const EdgeInsetsDirectional.only(start: 7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -236,6 +236,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       child: TextFormField(
                         controller: model.serverId,
                         readOnly: true,
+                        // PTDesk: the ID is a number - always render its digit
+                        // groups left-to-right, but keep it on the right edge
+                        // when the UI is RTL.
+                        textDirection: TextDirection.ltr,
+                        textAlign:
+                            Directionality.of(context) == TextDirection.rtl
+                                ? TextAlign.right
+                                : TextAlign.left,
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.only(top: 10, bottom: 10),
@@ -297,7 +305,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     final showOneTime = model.approveMode != 'click' &&
         model.verificationMethod != kUsePermanentPassword;
     return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 16, top: 13, bottom: 13),
+      margin: EdgeInsetsDirectional.only(start: 20.0, end: 16, top: 13, bottom: 13),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
@@ -309,7 +317,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 7),
+              padding: const EdgeInsetsDirectional.only(start: 7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -333,6 +341,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           child: TextFormField(
                             controller: model.serverPasswd,
                             readOnly: true,
+                            // PTDesk: passwords are Latin characters - always
+                            // LTR, right-anchored in RTL layouts.
+                            textDirection: TextDirection.ltr,
+                            textAlign:
+                                Directionality.of(context) == TextDirection.rtl
+                                    ? TextAlign.right
+                                    : TextAlign.left,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               contentPadding:
@@ -391,8 +406,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   buildTip(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
     return Padding(
-      padding:
-          const EdgeInsets.only(left: 20.0, right: 16, top: 16.0, bottom: 5),
+      padding: const EdgeInsetsDirectional.only(
+          start: 20.0, end: 16, top: 16.0, bottom: 5),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +416,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             children: [
               if (!isOutgoingOnly)
                 Align(
-                  alignment: Alignment.centerLeft,
+                  // PTDesk: follow text direction (right in RTL)
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     translate("Your Desktop"),
                     style: Theme.of(context).textTheme.titleLarge,
