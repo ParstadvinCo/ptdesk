@@ -34,15 +34,21 @@ jobs:
       target_version: Windows10
 
   build-ptdesk-windows:
-    name: build ptdesk windows x64 (${{ matrix.lang }})
+    name: build ptdesk windows x64 (${{ matrix.flavor }})
     needs: [build-TempTopMostWindow, generate-bridge]
     runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
-        # One exe per default UI language. fa also renders the UI right-to-left
-        # (RTL follows the selected language dynamically in both builds).
-        lang: [en, fa]
+        # Three flavors:
+        #   en - technician client, English default
+        #   fa - technician client, Farsi default + RTL
+        #   qs - customer quick-support: incoming-only, one-time password only,
+        #        Farsi default + RTL (RTL follows the selected language in all flavors)
+        include:
+          - { flavor: en, lang: en, qs: "" }
+          - { flavor: fa, lang: fa, qs: "" }
+          - { flavor: qs, lang: fa, qs: "1" }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
@@ -140,6 +146,7 @@ jobs:
       - name: Build ptdesk
         env:
           PTDESK_DEFAULT_LANG: ${{ matrix.lang }}
+          PTDESK_QS: ${{ matrix.qs }}
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           mv ./flutter/build/windows/x64/runner/Release ./rustdesk
@@ -172,7 +179,7 @@ jobs:
       - name: Upload app folder (unsigned)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ptdesk-unsigned-windows-x86_64-${{ matrix.lang }}
+          name: ptdesk-unsigned-windows-x86_64-${{ matrix.flavor }}
           path: rustdesk
 
       - name: Build self-extracted executable
@@ -184,12 +191,12 @@ jobs:
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/ptdesk-${{ env.VERSION }}-x86_64-${{ matrix.lang }}.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/ptdesk-${{ env.VERSION }}-x86_64-${{ matrix.flavor }}.exe
 
       - name: Upload PTDesk exe
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ptdesk-windows-x86_64-${{ matrix.lang }}
+          name: ptdesk-windows-x86_64-${{ matrix.flavor }}
           path: SignOutput
 
       - name: Publish Release
