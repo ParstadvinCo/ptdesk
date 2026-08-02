@@ -550,11 +550,24 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 }
 
 Widget _keepScaleBuilder(BuildContext context, Widget? child) {
-  return MediaQuery(
-    data: MediaQuery.of(context).copyWith(
-      textScaler: TextScaler.linear(1.0),
+  // PTDesk: mirror the UI for RTL languages. Follows the language saved in
+  // settings; falls back to the system locale when no language is chosen.
+  String lang = bind.mainGetLocalOption(key: kCommConfKeyLang).toLowerCase();
+  if ((lang.isEmpty || lang == 'default') && !isWeb) {
+    lang = Platform.localeName.toLowerCase();
+  }
+  final rtl = lang.startsWith('fa') ||
+      lang.startsWith('ar') ||
+      lang.startsWith('he') ||
+      lang.startsWith('ur');
+  return Directionality(
+    textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+    child: MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(1.0),
+      ),
+      child: child ?? Container(),
     ),
-    child: child ?? Container(),
   );
 }
 

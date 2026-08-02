@@ -34,9 +34,15 @@ jobs:
       target_version: Windows10
 
   build-ptdesk-windows:
-    name: build ptdesk windows x64
+    name: build ptdesk windows x64 (${{ matrix.lang }})
     needs: [build-TempTopMostWindow, generate-bridge]
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        # One exe per default UI language. fa also renders the UI right-to-left
+        # (RTL follows the selected language dynamically in both builds).
+        lang: [en, fa]
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
@@ -132,6 +138,8 @@ jobs:
           fi
 
       - name: Build ptdesk
+        env:
+          PTDESK_DEFAULT_LANG: ${{ matrix.lang }}
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           mv ./flutter/build/windows/x64/runner/Release ./rustdesk
@@ -164,7 +172,7 @@ jobs:
       - name: Upload app folder (unsigned)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ptdesk-unsigned-windows-x86_64
+          name: ptdesk-unsigned-windows-x86_64-${{ matrix.lang }}
           path: rustdesk
 
       - name: Build self-extracted executable
@@ -176,12 +184,12 @@ jobs:
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/ptdesk-${{ env.VERSION }}-x86_64.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/ptdesk-${{ env.VERSION }}-x86_64-${{ matrix.lang }}.exe
 
       - name: Upload PTDesk exe
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ptdesk-windows-x86_64
+          name: ptdesk-windows-x86_64-${{ matrix.lang }}
           path: SignOutput
 
       - name: Publish Release

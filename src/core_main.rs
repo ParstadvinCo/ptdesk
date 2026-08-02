@@ -33,6 +33,15 @@ pub fn core_main() -> Option<Vec<String>> {
         return None;
     }
     crate::load_custom_client();
+    // PTDesk: per-build-flavor default UI language (PTDESK_DEFAULT_LANG env at
+    // compile time). Only applied while the user has never chosen a language.
+    if let Some(lang) = option_env!("PTDESK_DEFAULT_LANG") {
+        if !lang.is_empty()
+            && hbb_common::config::LocalConfig::get_option("lang").is_empty()
+        {
+            hbb_common::config::LocalConfig::set_option("lang".to_owned(), lang.to_owned());
+        }
+    }
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process
