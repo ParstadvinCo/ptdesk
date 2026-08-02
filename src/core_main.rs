@@ -42,6 +42,12 @@ pub fn core_main() -> Option<Vec<String>> {
             hbb_common::config::LocalConfig::set_option("lang".to_owned(), lang.to_owned());
         }
     }
+    // PTDesk: no "Powered by RustDesk" footer in any flavor (upstream's own
+    // hide switch; source-level attribution stays in the repo per AGPL).
+    hbb_common::config::BUILTIN_SETTINGS
+        .write()
+        .unwrap()
+        .insert("hide-powered-by-me".to_owned(), "Y".to_owned());
     // PTDesk quick-support flavor (PTDESK_QS=1 at compile time): customer-side
     // client that can only RECEIVE connections and authenticates with the
     // one-time password only. The UI collapses to the ID/password panel.
