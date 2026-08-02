@@ -40,15 +40,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Three flavors:
-        #   en - technician client, English default
-        #   fa - technician client, Farsi default + RTL
-        #   qs - customer quick-support: incoming-only, one-time password only,
-        #        Farsi default + RTL (RTL follows the selected language in all flavors)
+        # Four flavors (RTL follows the selected language in all of them):
+        #   en    - technician client, English default
+        #   fa    - technician client, Farsi default + RTL
+        #   qs-en - customer quick-support (incoming-only, one-time password), English
+        #   qs-fa - customer quick-support (incoming-only, one-time password), Farsi + RTL
         include:
           - { flavor: en, lang: en, qs: "" }
           - { flavor: fa, lang: fa, qs: "" }
-          - { flavor: qs, lang: fa, qs: "1" }
+          - { flavor: qs-en, lang: en, qs: "1" }
+          - { flavor: qs-fa, lang: fa, qs: "1" }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
