@@ -9,8 +9,10 @@ import '../../common.dart';
 import '../../consts.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
+import 'package:get/get.dart';
+
 import 'connection_page.dart';
-import 'desktop_tab_page.dart';
+import 'desktop_setting_page.dart';
 
 const _kBg = Color(0xFF0E1A22);
 const _kCard = Color(0xFF122430);
@@ -39,9 +41,19 @@ class PtdeskQsHome extends StatefulWidget {
 }
 
 class _PtdeskQsHomeState extends State<PtdeskQsHome> {
+  final _perm = <String, RxBool>{};
+
   @override
   void initState() {
     super.initState();
+    for (final key in [
+      kOptionEnableKeyboard,
+      kOptionEnableClipboard,
+      kOptionEnableFileTransfer,
+      kOptionEnableAudio,
+    ]) {
+      _perm[key] = RxBool(option2bool(key, bind.mainGetOptionSync(key: key)));
+    }
     // Set the shared incoming-only home size so returning from the settings
     // tab restores this window size too.
     imcomingOnlyHomeSize = const Size(369, 400);
@@ -74,8 +86,8 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                         alignment: AlignmentDirectional.centerEnd,
                         child: Tooltip(
                           message: translate('Settings'),
-                          child: _iconButton(Icons.settings_outlined,
-                              () => DesktopTabPage.onAddSetting()),
+                          child: _iconButton(
+                              Icons.settings_outlined, () => _showSettings(fa)),
                         ),
                       ),
                       _logo(),
@@ -93,8 +105,8 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                       const SizedBox(height: 4),
                       Text(
                         fa
-                            ? 'این شناسه و رمز را به کارشناس پشتیبانی اعلام کنید'
-                            : 'Read this ID and password to your support technician',
+                            ? 'این شناسه را به کارشناس پشتیبانی اعلام کنید و سپس درخواست اتصال را تأیید کنید'
+                            : 'Give this ID to your support technician, then approve the connection request',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             color: _kLabel, fontSize: 12, height: 1.6),
@@ -114,21 +126,29 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      _valueCard(
-                        label: fa ? 'رمز یکبار مصرف' : 'One-time password',
-                        listenable: model.serverPasswd,
-                        valueColor: _kCyan,
-                        letterSpacing: 3,
-                        actions: [
-                          _iconButton(Icons.copy_rounded, () {
-                            Clipboard.setData(
-                                ClipboardData(text: model.serverPasswd.text));
-                            showToast(translate('Copied'));
-                          }),
-                          const SizedBox(width: 10),
-                          _iconButton(Icons.refresh_rounded,
-                              () => bind.mainUpdateTemporaryPassword()),
-                        ],
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _kCard,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.verified_user_outlined,
+                                size: 20, color: _kCyan),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                fa
+                                    ? 'بدون تأیید شما هیچ اتصالی برقرار نمی‌شود'
+                                    : 'No one can connect until you approve the request',
+                                style: const TextStyle(
+                                    color: _kLabel, fontSize: 12, height: 1.5),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 14),
                       Theme(
@@ -147,6 +167,98 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
         ],
       ),
     );
+  }
+
+  // Compact settings popup: language, proxy and the permissions the
+  // technician gets. Everything else stays out of the customer's way.
+  void _showSettings(bool fa) {
+    gFFI.dialogManager.show((setState, close, context) {
+      Widget permission(String label, String key) {
+        return Obx(() {
+          final on = _perm[key]?.value ?? false;
+          return SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: Text(label, style: const TextStyle(fontSize: 13)),
+            value: on,
+            onChanged: (v) async {
+              await bind.mainSetOption(key: key, value: v ? 'Y' : 'N');
+              _perm[key]?.value = v;
+            },
+          );
+        });
+      }
+
+      return CustomAlertDialog(
+        title: Text(fa ? 'تنظیمات' : 'Settings'),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(fa ? 'زبان' : 'Language',
+                  style: const TextStyle(fontSize: 12, color: _kLabel)),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await bind.mainSetLocalOption(
+                            key: kCommConfKeyLang, value: 'fa');
+                        await reloadAllWindows();
+                        await bind.mainChangeLanguage(lang: 'fa');
+                        close();
+                      },
+                      child: const Text('فارسی'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await bind.mainSetLocalOption(
+                            key: kCommConfKeyLang, value: 'en');
+                        await reloadAllWindows();
+                        await bind.mainChangeLanguage(lang: 'en');
+                        close();
+                      },
+                      child: const Text('English'),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Text(fa ? 'شبکه' : 'Network',
+                  style: const TextStyle(fontSize: 12, color: _kLabel)),
+              const SizedBox(height: 4),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.lan_outlined, size: 18),
+                label: Text(fa ? 'تنظیم پروکسی' : 'Proxy settings'),
+                onPressed: () {
+                  close();
+                  changeSocks5Proxy();
+                },
+              ),
+              const Divider(),
+              Text(fa ? 'دسترسی کارشناس' : 'Technician permissions',
+                  style: const TextStyle(fontSize: 12, color: _kLabel)),
+              permission(fa ? 'کنترل کیبورد و ماوس' : 'Keyboard and mouse',
+                  kOptionEnableKeyboard),
+              permission(fa ? 'کلیپ‌بورد' : 'Clipboard', kOptionEnableClipboard),
+              permission(fa ? 'انتقال فایل' : 'File transfer',
+                  kOptionEnableFileTransfer),
+              permission(fa ? 'صدا' : 'Audio', kOptionEnableAudio),
+            ],
+          ),
+        ),
+        actions: [
+          dialogButton(fa ? 'بستن' : 'Close', onPressed: close),
+        ],
+        onCancel: close,
+      );
+    });
   }
 
   Widget _logo() {

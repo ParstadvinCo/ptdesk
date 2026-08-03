@@ -58,10 +58,12 @@ pub fn core_main() -> Option<Vec<String>> {
             hard.insert("conn-type".to_owned(), "incoming".to_owned());
             hard.insert("disable-account".to_owned(), "Y".to_owned());
         }
-        hbb_common::config::OVERWRITE_SETTINGS.write().unwrap().insert(
-            "verification-method".to_owned(),
-            "use-temporary-password".to_owned(),
-        );
+        // No password at all: the customer approves each incoming session with
+        // a click, so there is nothing to read out over the phone.
+        hbb_common::config::OVERWRITE_SETTINGS
+            .write()
+            .unwrap()
+            .insert("approve-mode".to_owned(), "click".to_owned());
         // Settings the customer keeps: General (language/theme), Security
         // (permissions the technician gets), Network (proxy), About.
         hbb_common::config::BUILTIN_SETTINGS
