@@ -52,14 +52,22 @@ pub fn core_main() -> Option<Vec<String>> {
     // client that can only RECEIVE connections and authenticates with the
     // one-time password only. The UI collapses to the ID/password panel.
     if option_env!("PTDESK_QS").map_or(false, |v| !v.is_empty()) {
-        hbb_common::config::HARD_SETTINGS
-            .write()
-            .unwrap()
-            .insert("conn-type".to_owned(), "incoming".to_owned());
+        {
+            // Customers never sign in, so the account tab goes too.
+            let mut hard = hbb_common::config::HARD_SETTINGS.write().unwrap();
+            hard.insert("conn-type".to_owned(), "incoming".to_owned());
+            hard.insert("disable-account".to_owned(), "Y".to_owned());
+        }
         hbb_common::config::OVERWRITE_SETTINGS.write().unwrap().insert(
             "verification-method".to_owned(),
             "use-temporary-password".to_owned(),
         );
+        // Settings the customer keeps: General (language/theme), Security
+        // (permissions the technician gets), Network (proxy), About.
+        hbb_common::config::BUILTIN_SETTINGS
+            .write()
+            .unwrap()
+            .insert("hide-remote-printer-setting".to_owned(), "Y".to_owned());
     }
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {

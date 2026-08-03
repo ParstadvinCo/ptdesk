@@ -10,6 +10,7 @@ import '../../consts.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
 import 'connection_page.dart';
+import 'desktop_tab_page.dart';
 
 const _kBg = Color(0xFF0E1A22);
 const _kCard = Color(0xFF122430);
@@ -41,9 +42,12 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
   @override
   void initState() {
     super.initState();
+    // Set the shared incoming-only home size so returning from the settings
+    // tab restores this window size too.
+    imcomingOnlyHomeSize = const Size(369, 400);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (isInHomePage()) {
-        windowManager.setSize(const Size(380, 560));
+        windowManager.setSize(getIncomingOnlyHomeSize());
       }
     });
   }
@@ -54,10 +58,10 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
     return Container(
       color: _kBg,
       width: double.infinity,
-      height: double.infinity,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               child: ChangeNotifierProvider.value(
@@ -66,6 +70,14 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                   builder: (context, model, child) => Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Tooltip(
+                          message: translate('Settings'),
+                          child: _iconButton(Icons.settings_outlined,
+                              () => DesktopTabPage.onAddSetting()),
+                        ),
+                      ),
                       _logo(),
                       const SizedBox(height: 10),
                       Text(
@@ -118,20 +130,18 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                               () => bind.mainUpdateTemporaryPassword()),
                         ],
                       ),
+                      const SizedBox(height: 14),
+                      Theme(
+                        data: ThemeData.dark(),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: OnlineStatusWidget(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-          const Divider(color: _kBorder, height: 1, thickness: 1),
-          Theme(
-            data: ThemeData.dark(),
-            child: Container(
-              color: const Color(0xFF0A141B),
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: OnlineStatusWidget(),
             ),
           ),
         ],
