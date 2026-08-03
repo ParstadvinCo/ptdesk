@@ -172,7 +172,11 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
   // Compact settings popup: language, proxy and the permissions the
   // technician gets. Everything else stays out of the customer's way.
   void _showSettings(bool fa) {
-    gFFI.dialogManager.show((setState, close, context) {
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+      void close() => Navigator.of(context).pop();
       Widget permission(String label, String key) {
         return Obx(() {
           final on = _perm[key]?.value ?? false;
@@ -193,7 +197,8 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
         title: Text(fa ? 'تنظیمات' : 'Settings'),
         content: SizedBox(
           width: 320,
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -251,6 +256,7 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
                   kOptionEnableFileTransfer),
               permission(fa ? 'صدا' : 'Audio', kOptionEnableAudio),
             ],
+          ),
           ),
         ),
         actions: [
