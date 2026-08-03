@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 
 import 'connection_page.dart';
 import 'desktop_setting_page.dart';
+import 'desktop_tab_page.dart';
 
 const _kBg = Color(0xFF0E1A22);
 const _kCard = Color(0xFF122430);
@@ -67,7 +68,9 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
   @override
   Widget build(BuildContext context) {
     final fa = _isFa();
-    return Container(
+    return Material(
+      color: _kBg,
+      child: Container(
       color: _kBg,
       width: double.infinity,
       child: Column(
@@ -166,14 +169,19 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
           ),
         ],
       ),
+      ),
     );
   }
 
   // Compact settings popup: language, proxy and the permissions the
   // technician gets. Everything else stays out of the customer's way.
   void _showSettings(bool fa) {
+    // Root navigator + explicit failure handling: if the dialog cannot be
+    // shown for any reason, fall back to the standard settings page instead
+    // of the click doing nothing at all.
     showDialog(
         context: context,
+        useRootNavigator: true,
         barrierDismissible: true,
         builder: (context) {
       void close() => Navigator.of(context).pop();
@@ -264,6 +272,10 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
         ],
         onCancel: close,
       );
+    }).catchError((e) {
+      debugPrint('PTDesk: settings dialog failed: $e');
+      DesktopTabPage.onAddSetting();
+      return null;
     });
   }
 
@@ -336,13 +348,15 @@ class _PtdeskQsHomeState extends State<PtdeskQsHome> {
     );
   }
 
+  // GestureDetector rather than InkWell: no Material/ink dependency, and
+  // opaque hit testing so the whole padded box is tappable.
   Widget _iconButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(6),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(icon, size: 18, color: _kIcon),
+        padding: const EdgeInsets.all(6),
+        child: Icon(icon, size: 20, color: _kIcon),
       ),
     );
   }
